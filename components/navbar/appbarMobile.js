@@ -16,7 +16,7 @@ const AppbarMobile = ({
   const router = useRouter();
   const [openDrawer, setOpenDrawer] = useState(false);
 
-  const user = false;
+  const user = true;
   return (
     <>
       <AppbarContainer>

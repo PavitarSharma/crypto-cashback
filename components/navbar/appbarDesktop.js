@@ -18,7 +18,7 @@ const AppbarDesktop = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const user = false;
+  const user = true;
 
   return (
     <>
