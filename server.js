@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import errorMiddleware from "./middlewares/error.js";
 import connectDB from "./utils/connectDB.js";
+import userRoutes from "./routes/user.routes.js";
 
 dotenv.config();
 
@@ -16,7 +17,11 @@ connectDB();
 
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "http://localhost:3000",
+      "*",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
 );
@@ -33,6 +38,8 @@ app.get("/", (req, res) => {
     message: "Server is running...",
   });
 });
+
+app.use("/api/user", userRoutes);
 
 app.use(errorMiddleware);
 

@@ -7,13 +7,13 @@ const userSchema = mongoose.Schema(
   {
     firstName: {
       type: String,
-      required: [true, "First name id required!"],
+      required: [true, "First name is required!"],
       trim: true,
     },
 
     lastName: {
       type: String,
-      required: [true, "Last name id required!"],
+      required: [true, "Last name is required!"],
       trim: true,
     },
 
@@ -27,7 +27,7 @@ const userSchema = mongoose.Schema(
 
     mobile: {
       type: Number,
-      unique: true,
+      // unique: true,
       default: null,
     },
 
@@ -39,6 +39,12 @@ const userSchema = mongoose.Schema(
     role: {
       type: String,
       default: "user",
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required!"],
+      trim: true,
     },
 
     address: {
@@ -61,6 +67,16 @@ const userSchema = mongoose.Schema(
         type: String,
         trin: true,
       },
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    termsCheck: {
+      type: Boolean,
+      default: false
     },
 
     resetPasswordToken: String,
