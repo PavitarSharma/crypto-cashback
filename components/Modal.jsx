@@ -1,32 +1,9 @@
 "use client";
-import {
-  Backdrop,
-  Box,
-  Fade,
-  IconButton,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Backdrop, Box, Fade, IconButton } from "@mui/material";
 import MuiModal from "@mui/material/Modal";
-import { useCallback } from "react";
 import { MdClose } from "react-icons/md";
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 600,
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  p: 4,
-};
-
-const Modal = ({ open, setOpen, body, width = 550 }) => {
-  const theme = useTheme();
-  const mobScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const handleClose = useCallback(() => setOpen(false), []);
+const Modal = ({ open, onClose, body, width = 550 }) => {
   return (
     <MuiModal
       slots={{ backdrop: Backdrop }}
@@ -38,7 +15,7 @@ const Modal = ({ open, setOpen, body, width = 550 }) => {
       closeAfterTransition
       keepMounted
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
     >
       <Fade in={open}>
         <Box padding="20px">
@@ -57,7 +34,7 @@ const Modal = ({ open, setOpen, body, width = 550 }) => {
             }}
           >
             <IconButton
-              onClick={handleClose}
+              onClick={onClose}
               sx={{ position: "absolute", top: 4, right: 8 }}
             >
               <MdClose color="#000" size={22} />

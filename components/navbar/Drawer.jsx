@@ -14,7 +14,7 @@ const MiddleDivider = styled((props) => (
 const Drawer = ({ openDrawer, setOpenDrawer }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const user = true;
+  const user = false;
 
   const handlePageChange = useCallback((path) => {
     router.push(path);

@@ -9,16 +9,19 @@ import Actions from "./Actions";
 import { usePathname, useRouter } from "next/navigation";
 import { Stack } from "@mui/material";
 import Button from "../Button";
+import useLoginModal from "@/hooks/useLoginModal";
+import useRegisterModal from "@/hooks/useRegisterModal";
 
 const AppbarDesktop = ({
-  handleOpenLoginModal,
   matches,
-  handleOpenSignupModal,
   navbarColor,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const user = true;
+  const user = false;
+
+  const loginModal = useLoginModal();
+  const registerModal = useRegisterModal();
 
   return (
     <>
@@ -64,9 +67,9 @@ const AppbarDesktop = ({
           </>
         ) : (
           <Stack direction="row" gap="10px">
-            <Button title="Login" onClick={handleOpenLoginModal} />
+            <Button title="Login" onClick={loginModal.onOpen} />
             <Button
-              onClick={handleOpenSignupModal}
+              onClick={registerModal.onOpen}
               variant="outlined"
               title="Sign Up"
               sx={{ color: "black" }}

@@ -7,16 +7,16 @@ import { IoMdPerson } from "react-icons/io";
 import { MdMenu } from "react-icons/md";
 import Drawer from "./Drawer";
 import Button from "../Button";
+import useLoginModal from "@/hooks/useLoginModal";
+import useRegisterModal from "@/hooks/useRegisterModal";
 
-const AppbarMobile = ({
-  matches,
-  handleOpenLoginModal,
-  handleOpenSignupModal,
-}) => {
+const AppbarMobile = ({ matches }) => {
   const router = useRouter();
   const [openDrawer, setOpenDrawer] = useState(false);
+  const loginModal = useLoginModal();
+  const registerModal = useRegisterModal();
 
-  const user = true;
+  const user = false;
   return (
     <>
       <AppbarContainer>
@@ -39,9 +39,9 @@ const AppbarMobile = ({
           </IconButton>
         ) : (
           <Stack direction="row" gap="10px">
-            <Button title="Login" onClick={handleOpenLoginModal} />
+            <Button title="Login" onClick={loginModal.onOpen} />
             <Button
-              onClick={handleOpenSignupModal}
+              onClick={registerModal.onOpen}
               variant="outlined"
               title="Sign Up"
               sx={{ color: "black" }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid, Paper, Typography } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import Modal from "../Modal";
 import RHFTextFiled from "../inputs/RHFTextFiled";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,14 @@ import RHFPasswordInput from "../inputs/RHFPasswordInput";
 import Button from "../Button";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
+import toast from "react-hot-toast";
+import { useLoginMutation } from "@/redux/auth/authApiSlice";
+import { useDispatch } from "react-redux";
+import { setCredentails } from "@/redux/auth/authSlice";
+import useLoginModal from "@/hooks/useLoginModal";
+import useRegisterModal from "@/hooks/useRegisterModal";
+import { useCallback } from "react";
+import useForgotPasswordModal from "@/hooks/useForgotPasswordModal";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Email is Invalid").required("Email is required!"),
@@ -22,14 +30,48 @@ const validationSchema = Yup.object({
 });
 
 const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
+  const dispatch = useDispatch();
   const { control, reset, handleSubmit } = useForm({
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (values) => {
-    console.log(values);
-    reset();
+  const loginModal = useLoginModal();
+  const registerModal = useRegisterModal();
+  const forgotPasswordModal = useForgotPasswordModal();
+
+  const [login, { isLoading }] = useLoginMutation();
+
+  const onSubmit = async (values) => {
+    try {
+      const response = await login(values).unwrap();
+
+      if (
+        response?.message ===
+        "Your account is not verified. Please verify your account before login."
+      ) {
+        setOpenOtpModal(true);
+      } else {
+        console.log(response);
+        dispatch(setCredentails(response));
+        toast.success("Log in successfully.");
+      }
+
+      // reset();
+    } catch (error) {
+      console.log(error);
+      toast.error(error.data.message);
+    }
   };
+
+  const onToggle = useCallback(() => {
+    loginModal.onClose();
+    registerModal.onOpen();
+  }, [loginModal, registerModal]);
+
+  const onToggleForgotPassword = useCallback(() => {
+    loginModal.onClose();
+    forgotPasswordModal.onOpen();
+  }, [loginModal, forgotPasswordModal]);
 
   const body = (
     <Paper component="form" elevation={0} onSubmit={handleSubmit(onSubmit)}>
@@ -50,10 +92,20 @@ const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
             name="password"
             control={control}
           />
+
+          <Box display="flex" justifyContent="flex-end" marginTop={1}>
+            <Typography
+              onClick={onToggleForgotPassword}
+              sx={{ textDecoration: "underline", cursor: "pointer" }}
+            >
+              Forgot Password?
+            </Typography>
+          </Box>
         </Grid>
 
         <Grid item xs={12}>
           <Button
+            disabled={isLoading}
             type="submit"
             size="large"
             title="Log In"
@@ -65,14 +117,21 @@ const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
       <Typography
         textAlign="center"
         marginTop={2}
-        onClick={handleOpenSignupModal}
+        onClick={onToggle}
         sx={{ textDecoration: "underline", cursor: "pointer" }}
       >
         Don't have account? Create here
       </Typography>
     </Paper>
   );
-  return <Modal width={600} open={open} setOpen={setOpen} body={body} />;
+  return (
+    <Modal
+      width={600}
+      open={loginModal.isOpen}
+      onClose={loginModal.onClose}
+      body={body}
+    />
+  );
 };
 
 export default LoginModal;

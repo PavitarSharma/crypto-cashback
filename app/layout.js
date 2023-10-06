@@ -2,6 +2,12 @@ import Navbar from "@/components/navbar";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import MuiThemeProvider from "@/provider/MuiThemeProvider";
+import ReduxProvider from "@/provider/ReduxProvider";
+import ClientOnly from "@/components/ClientOnly";
+import LoginModal from "@/components/modals/LoginModal";
+import RegisterModal from "@/components/modals/RegisterModal";
+import ForgotPasswordModal from "@/components/modals/ForgotPasswordModal";
+import OTPModal from "@/components/modals/OTPModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,11 +19,19 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className} >
-        <MuiThemeProvider>
-          <Navbar />
-          {children}
-        </MuiThemeProvider>
+      <body className={inter.className}>
+        <ReduxProvider>
+          <MuiThemeProvider>
+            {/* <ClientOnly> */}
+            <LoginModal />
+            <RegisterModal />
+            <ForgotPasswordModal />
+            <OTPModal />
+            <Navbar />
+            {/* </ClientOnly> */}
+            {children}
+          </MuiThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
