@@ -14,7 +14,10 @@ class UserService {
       role: user.role,
       avatar: user.avatar ? user.avatar : null,
       mobile: user.mobile ? user.mobile : null,
-      isVerified: user.isVerified
+      isVerified: user.isVerified,
+      termsCheck: user.termsCheck,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     };
   }
 
@@ -82,6 +85,16 @@ class UserService {
 
     if (!user) {
       throw new Error(message);
+    }
+
+    return user;
+  }
+
+  async findUserWithId(id) {
+    const user = await User.findById(id);
+
+    if (!user) {
+      throw new Error("User not found");
     }
 
     return user;

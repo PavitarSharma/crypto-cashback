@@ -4,6 +4,10 @@ import ErrorHandler from "../utils/ErrorHandler.js";
 import sendMail from "../utils/sendMail.js";
 import { otpTemplate } from "../templates/otpTemplate.js";
 import tokenService from "../services/token.service.js";
+import { forgotPasswordEmailTemplate } from "../templates/forgotPasswordEmailTemplate.js";
+import User from "../models/User.js";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 // Create a new User
 export const signUpUser = asyncHandler(async (req, res, next) => {
@@ -129,17 +133,13 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     const data = `${email}.${otp}.${expires}`;
     const hash = userService.hashOtp(data);
 
-    try {
-      await userService.senByMail({ email, otp });
-      res.json({
-        otp,
-        email,
-        hash: `${hash}.${expires}`,
-        message: `Your account is not verified. Please verify your account before login.`,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Message sending failed." });
-    }
+    await userService.senByMail({ email, otp });
+    res.status(400).json({
+      otp,
+      email,
+      hash: `${hash}.${expires}`,
+      message: `Your account is not verified. Please verify your account before login.`,
+    });
   }
 
   const validPassword = await userService.comparePassword(
@@ -157,11 +157,14 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   const { accessToken, refreshToken } = await tokenService.generateTokens({
     _id: user._id,
     email: user.email,
+    role: user.role,
   });
 
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("cryptoRefreshToken", refreshToken, {
     maxAge: 1000 * 60 * 60 * 24 * 30,
     httpOnly: true,
+    // secure: true,
+    // sameSite: "None",
   });
 
   res.status(200).json({
@@ -170,20 +173,208 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   });
 });
 
+// Refresh Token
+export const refreshTokenUser = async (req, res, next) => {
+  const cookies = req.cookies;
+
+  if (!cookies?.cryptoRefreshToken)
+    return next(new ErrorHandler(401, "Unauthorized"));
+
+  const refreshToken = cookies?.cryptoRefreshToken;
+
+  jwt.verify(
+    refreshToken,
+    process.env.JWT_REFRESH_TOKEN_SECRET,
+    asyncHandler(async (err, decoded) => {
+      if (err) return res.status(403).json({ message: "Forbidden" });
+
+      const foundUser = await userService.findUserWithId(decoded);
+
+      const accessToken = await tokenService.generateAccessToken({
+        _id: foundUser._id,
+        email: foundUser.email,
+        role: foundUser.role,
+      });
+
+      res.json({ accessToken });
+    })
+  );
+};
+
 // Forgot Password
-export const forgotPassword = asyncHandler(async (req, res, next) => {});
+export const forgotPassword = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email)
+    return next(
+      new ErrorHandler(400, "Please provide your mail to reset the password.")
+    );
+
+  const user = await userService.findUser({
+    email,
+    message: "User not found.",
+  });
+
+  const resetToken = user.getResetToken();
+
+  await user.save({
+    validateBeforeSave: false,
+  });
+
+  const resetPasswordUrl = `${process.env.CLIENT_URL}/resetPassword?token=${resetToken}`;
+
+  const html = forgotPasswordEmailTemplate({
+    name: `${user.firstName}`,
+    productName: process.env.COMPANY_NAME,
+    url: resetPasswordUrl,
+    companyName: process.env.COMPANY_NAME,
+  });
+
+  await sendMail({
+    email: user.email,
+    html,
+    subject: `${process.env.COMPANY_NAME}: Reset your password.`,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `Email sent to ${user.email} succesfully`,
+  });
+});
 
 // Reset Password
-export const resetPassword = asyncHandler(async (req, res, next) => {});
+export const resetPassword = asyncHandler(async (req, res, next) => {
+  const { password, confirmPassword } = req.body;
+  const { token } = req.query;
+
+  if (!password || !confirmPassword) {
+    return next(
+      new ErrorHandler(
+        400,
+        "Please enter password and confirm password for your reset the paasword."
+      )
+    );
+  }
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordTime: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new ErrorHandler(400, "Reset password url is invalid or has been expired")
+    );
+  }
+
+  if (password !== confirmPassword) {
+    return next(new ErrorHandler(400, "Password not matched with each other"));
+  }
+
+  const hashPassword = await userService.hashPassword(password);
+  user.password = hashPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordTime = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset done.",
+  });
+});
 
 // Update Password
-export const updatePassword = asyncHandler(async (req, res, next) => {});
+export const updatePassword = asyncHandler(async (req, res, next) => {
+  const { password, confirmPassword } = req.body;
+
+  if (!password || !confirmPassword) {
+    return next(
+      new ErrorHandler(
+        400,
+        "Please enter password and confirm password for your reset the paasword."
+      )
+    );
+  }
+
+  if (password !== confirmPassword) {
+    return next(new ErrorHandler(400, "Password not matched with each other"));
+  }
+
+  const user = await userService.findUserWithId(req.user._id);
+
+  const hashPassword = await userService.hashPassword(password);
+  user.password = hashPassword;
+
+  user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password updated.",
+  });
+});
+
+// Get All Users
+export const allUsers = asyncHandler(async (req, res, next) => {
+  const users = await User.find({}, { password: 0, __v: 0 }).sort({
+    createdAt: -1,
+  });
+  res.status(200).json(users);
+});
+
+// Ger User Details
+export const userDetail = asyncHandler(async (req, res, next) => {
+  const foundUser = await userService.findUserWithId(req.params.id);
+  const user = await userService.getUserDetail(foundUser);
+  res.status(200).json(user);
+});
 
 // Edit User
-export const updateUser = asyncHandler(async (req, res, next) => {});
+export const updateUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidator: true,
+    // useFindAndModify: false,
+  }).select("-password");
+
+  if (!user) {
+    return next(new ErrorHandler(404, "User not found"));
+  }
+
+  res.status(200).json(user);
+});
+
+// Upload User Profile Picture
+export const uploadUserProfilePicture = asyncHandler(
+  async (req, res, next) => {}
+);
 
 // Log out User
-export const logoutUser = asyncHandler(async (req, res, next) => {});
+export const logoutUser = asyncHandler(async (req, res, next) => {
+  const cookies = req.cookies;
+
+  if (!cookies?.cryptoRefreshToken) return res.sendStatus(204);
+
+  res.clearCookie("cryptoRefreshToken", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
+});
 
 // Delete User
-export const deleteUser = asyncHandler(async (req, res, next) => {});
+export const deleteUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndRemove(req.params.id);
+
+  if (!user) {
+    return next(new ErrorHandler(404, "User not found"));
+  }
+
+  res.status(200).json(user);
+});

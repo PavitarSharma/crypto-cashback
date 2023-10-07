@@ -23,6 +23,18 @@ class TokenService {
       refreshToken,
     };
   }
+
+  async generateAccessToken(payload) {
+    const accessToken = await jwt.sign(
+      payload,
+      process.env.JWT_ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+
+    return accessToken
+  }
 }
 
 const tokenService = new TokenService();
