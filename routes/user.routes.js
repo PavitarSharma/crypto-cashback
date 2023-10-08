@@ -4,8 +4,6 @@ import {
   deleteUser,
   forgotPassword,
   loginUser,
-  logoutUser,
-  refreshTokenUser,
   resendOtp,
   resetPassword,
   signUpUser,
@@ -31,7 +29,6 @@ router.post("/forgot-password", forgotPassword);
 
 router.post("/reset-password", resetPassword);
 
-router.get("/refresh", refreshTokenUser);
 
 // Auth Routes
 
@@ -44,8 +41,6 @@ router.get("/:id", auth, userDetail);
 router.patch("/:id", auth, updateUser);
 
 router.post("/:id/avatar", auth, uploadUserProfilePicture);
-
-router.post("/logout", auth, logoutUser);
 
 router.delete("/:id", auth, deleteUser);
 

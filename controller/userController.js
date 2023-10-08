@@ -154,17 +154,10 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   const userDetail = userService.getUserDetail(user);
 
   //Token
-  const { accessToken, refreshToken } = await tokenService.generateTokens({
+  const { accessToken } = await tokenService.generateTokens({
     _id: user._id,
     email: user.email,
     role: user.role,
-  });
-
-  res.cookie("cryptoRefreshToken", refreshToken, {
-    maxAge: 1000 * 60 * 60 * 24 * 30,
-    httpOnly: true,
-    // secure: true,
-    // sameSite: "None",
   });
 
   res.status(200).json({
@@ -172,34 +165,6 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     user: userDetail,
   });
 });
-
-// Refresh Token
-export const refreshTokenUser = async (req, res, next) => {
-  const cookies = req.cookies;
-
-  if (!cookies?.cryptoRefreshToken)
-    return next(new ErrorHandler(401, "Unauthorized"));
-
-  const refreshToken = cookies?.cryptoRefreshToken;
-
-  jwt.verify(
-    refreshToken,
-    process.env.JWT_REFRESH_TOKEN_SECRET,
-    asyncHandler(async (err, decoded) => {
-      if (err) return res.status(403).json({ message: "Forbidden" });
-
-      const foundUser = await userService.findUserWithId(decoded);
-
-      const accessToken = await tokenService.generateAccessToken({
-        _id: foundUser._id,
-        email: foundUser.email,
-        role: foundUser.role,
-      });
-
-      res.json({ accessToken });
-    })
-  );
-};
 
 // Forgot Password
 export const forgotPassword = asyncHandler(async (req, res, next) => {
@@ -244,10 +209,10 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 
 // Reset Password
 export const resetPassword = asyncHandler(async (req, res, next) => {
-  const { password, confirmPassword } = req.body;
+  const { newPassword, confirmPassword } = req.body;
   const { token } = req.query;
 
-  if (!password || !confirmPassword) {
+  if (!newPassword || !confirmPassword) {
     return next(
       new ErrorHandler(
         400,
@@ -272,11 +237,11 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (password !== confirmPassword) {
+  if (newPassword !== confirmPassword) {
     return next(new ErrorHandler(400, "Password not matched with each other"));
   }
 
-  const hashPassword = await userService.hashPassword(password);
+  const hashPassword = await userService.hashPassword(newPassword);
   user.password = hashPassword;
   user.resetPasswordToken = undefined;
   user.resetPasswordTime = undefined;
@@ -291,9 +256,9 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
 // Update Password
 export const updatePassword = asyncHandler(async (req, res, next) => {
-  const { password, confirmPassword } = req.body;
+  const { newPassword, confirmPassword } = req.body;
 
-  if (!password || !confirmPassword) {
+  if (!newPassword || !confirmPassword) {
     return next(
       new ErrorHandler(
         400,
@@ -302,13 +267,13 @@ export const updatePassword = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (password !== confirmPassword) {
+  if (newPassword !== confirmPassword) {
     return next(new ErrorHandler(400, "Password not matched with each other"));
   }
 
   const user = await userService.findUserWithId(req.user._id);
 
-  const hashPassword = await userService.hashPassword(password);
+  const hashPassword = await userService.hashPassword(newPassword);
   user.password = hashPassword;
 
   user.save();
@@ -353,20 +318,6 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 export const uploadUserProfilePicture = asyncHandler(
   async (req, res, next) => {}
 );
-
-// Log out User
-export const logoutUser = asyncHandler(async (req, res, next) => {
-  const cookies = req.cookies;
-
-  if (!cookies?.cryptoRefreshToken) return res.sendStatus(204);
-
-  res.clearCookie("cryptoRefreshToken", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-
-  res.status(200).json({ message: "Logged out successfully" });
-});
 
 // Delete User
 export const deleteUser = asyncHandler(async (req, res, next) => {

@@ -16,6 +16,7 @@ class UserService {
       mobile: user.mobile ? user.mobile : null,
       isVerified: user.isVerified,
       termsCheck: user.termsCheck,
+      address: user.address,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };
