@@ -9,13 +9,12 @@ import Button from "../Button";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
-import { useLoginMutation } from "@/redux/auth/authApiSlice";
-import { useDispatch } from "react-redux";
-import { setCredentails } from "@/redux/auth/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRegisterModal from "@/hooks/useRegisterModal";
 import { useCallback } from "react";
 import useForgotPasswordModal from "@/hooks/useForgotPasswordModal";
+import { AuthState, login } from "@/redux/reducers/authSlice";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Email is Invalid").required("Email is required!"),
@@ -29,8 +28,9 @@ const validationSchema = Yup.object({
     .required("Passowrd is required!"),
 });
 
-const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
+const LoginModal = () => {
   const dispatch = useDispatch();
+  const { status } = useSelector(AuthState);
   const { control, reset, handleSubmit } = useForm({
     resolver: yupResolver(validationSchema),
   });
@@ -39,28 +39,12 @@ const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
   const registerModal = useRegisterModal();
   const forgotPasswordModal = useForgotPasswordModal();
 
-  const [login, { isLoading }] = useLoginMutation();
-
   const onSubmit = async (values) => {
-    try {
-      const response = await login(values).unwrap();
+    await dispatch(login(values)).unwrap();
+    toast.success("Log in successfully.");
+    loginModal.onClose();
 
-      if (
-        response?.message ===
-        "Your account is not verified. Please verify your account before login."
-      ) {
-        setOpenOtpModal(true);
-      } else {
-        console.log(response);
-        dispatch(setCredentails(response));
-        toast.success("Log in successfully.");
-      }
-
-      // reset();
-    } catch (error) {
-      console.log(error);
-      toast.error(error.data.message);
-    }
+    reset();
   };
 
   const onToggle = useCallback(() => {
@@ -105,7 +89,7 @@ const LoginModal = ({ open, setOpen, handleOpenSignupModal }) => {
 
         <Grid item xs={12}>
           <Button
-            disabled={isLoading}
+            disabled={status === "loading"}
             type="submit"
             size="large"
             title="Log In"

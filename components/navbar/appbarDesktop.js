@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AppbarContainer,
   AppbarHeader,
@@ -11,17 +13,24 @@ import { Stack } from "@mui/material";
 import Button from "../Button";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRegisterModal from "@/hooks/useRegisterModal";
+import { useDispatch, useSelector } from "react-redux";
+import { AuthState, logOut } from "@/redux/reducers/authSlice";
+import toast from "react-hot-toast";
 
-const AppbarDesktop = ({
-  matches,
-  navbarColor,
-}) => {
+const AppbarDesktop = ({ matches, navbarColor }) => {
+  const dispatch = useDispatch();
   const router = useRouter();
+  const { user } = useSelector(AuthState);
   const pathname = usePathname();
-  const user = false;
 
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
+
+  const handleLogout = () => {
+    dispatch(logOut());
+    router.push("/")
+    toast.success("Logout successfully done.");
+  };
 
   return (
     <>
@@ -63,7 +72,7 @@ const AppbarDesktop = ({
               </AppbarLink>
             </MyList>
 
-            <Actions matches={matches} />
+            <Actions handleLogout={handleLogout} matches={matches} />
           </>
         ) : (
           <Stack direction="row" gap="10px">

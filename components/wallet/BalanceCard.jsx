@@ -5,7 +5,7 @@ import { Card, CardContent, Stack, Typography } from "@mui/material";
 
 const BalanceCard = ({ title, total, currency, image }) => {
   return (
-    <Card sx={{ border: `1px solid ${Colors.dove_gray}` }} elevation={0.5}>
+    <Card sx={{ border: `1px solid ${Colors.body_bg}` }} elevation={1}>
       <CardContent>
         <Stack
           direction="row"

@@ -13,6 +13,8 @@ export const Colors = {
   border: "#DDDFE1",
   inverse: "#2F3D4A",
   shaft: "#333",
+  lightRed: "#f8d7da",
+  lightBorderRed: "#f5c6cb",
 
   dim_grey: "#696969",
   dove_gray: "#d5d5d5",

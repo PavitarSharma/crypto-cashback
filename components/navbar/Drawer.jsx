@@ -1,4 +1,3 @@
-import useAppState from "@/hooks/useAppState";
 import { AppbarLink, DrawerCloseButton, MyList } from "@/styles/Appbar";
 import { Box, Divider, List, Stack, Typography, styled } from "@mui/material";
 import MuiDrawer from "@mui/material/Drawer";
@@ -6,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { MdClose } from "react-icons/md";
 import Button from "../Button";
+import { useSelector } from "react-redux";
+import { AuthState } from "@/redux/reducers/authSlice";
 
 const MiddleDivider = styled((props) => (
   <Divider sx={{ marginTop: 1, marginBottom: 1 }} variant="middle" {...props} />
@@ -14,7 +15,7 @@ const MiddleDivider = styled((props) => (
 const Drawer = ({ openDrawer, setOpenDrawer }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const user = false;
+  const { user } = useSelector(AuthState);
 
   const handlePageChange = useCallback((path) => {
     router.push(path);

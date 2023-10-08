@@ -20,15 +20,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useCallback, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useSignUpMutation } from "@/redux/auth/authApiSlice";
+import { useDispatch, useSelector } from "react-redux";
 import OTPModal from "./OTPModal";
 import LoginModal from "./LoginModal";
 import toast from "react-hot-toast";
-import { getOtpData } from "@/redux/auth/authSlice";
 import useRegisterModal from "@/hooks/useRegisterModal";
 import useLoginModal from "@/hooks/useLoginModal";
 import useOtpModal from "@/hooks/useOtpModal";
+import { AuthState, signUp } from "@/redux/reducers/authSlice";
 
 const validationSchema = Yup.object({
   firstName: Yup.string()
@@ -53,11 +52,11 @@ const validationSchema = Yup.object({
 
 const RegisterModal = () => {
   const dispatch = useDispatch();
+  const {status} = useSelector(AuthState)
   const registerModal = useRegisterModal();
   const loginModal = useLoginModal();
   const otpModal = useOtpModal();
 
-  const [signUp, { isLoading }] = useSignUpMutation();
   const {
     control,
     reset,
@@ -70,9 +69,9 @@ const RegisterModal = () => {
   const captchaRef = useRef(null);
 
   const toggleOtpModal = useCallback(() => {
-    otpModal.onOpen()
-    registerModal.onClose()
-  }, [otpModal, registerModal])
+    otpModal.onOpen();
+    registerModal.onClose();
+  }, [otpModal, registerModal]);
 
   const onSubmit = async (values) => {
     // const token = captchaRef.current.getValue();
@@ -80,18 +79,9 @@ const RegisterModal = () => {
     //   throw new Error("Please verify");
     // }
 
-    toggleOtpModal()
-
-    // try {
-    //   const response = await signUp(values).unwrap();
-    //   dispatch(getOtpData(response));
-    //   // reset();
-
-    //   setOpen(false);
-    //   toast.success(response.message);
-    // } catch (error) {
-    //   console.log(error);
-    // }
+    const response = await dispatch(signUp(values)).unwrap();
+    toggleOtpModal();
+    toast.success(response.message);
   };
 
   const termsCheckboxLabel = (
@@ -182,7 +172,7 @@ const RegisterModal = () => {
 
           <Grid item xs={12} sx={{ marginTop: 1 }}>
             <Button
-              disabled={isLoading}
+              disabled={status === "loading"}
               type="submit"
               size="large"
               title="Create Account"

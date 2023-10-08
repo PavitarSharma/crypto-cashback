@@ -25,3 +25,13 @@ a {
   width: 100%
 }
 
+.store::-webkit-scrollbar {
+  width: 12px;
+  height: 50px;
+}
+
+.store::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 2px;
+}
+
