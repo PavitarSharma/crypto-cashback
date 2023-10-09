@@ -24,6 +24,30 @@ export const signUp = createAsyncThunk(
   }
 );
 
+// Verify Otp
+export const verifyOtp = createAsyncThunk(
+  "/auth/verify-otp",
+  async ({ otp, email, hash }, thunkAPI) => {
+    try {
+      return await authService.verifyOtp({ otp, email, hash });
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
+export const resendOtp = createAsyncThunk(
+  "/auth/resend-otp",
+  async ({ email }, thunkAPI) => {
+    try {
+      return await authService.resendOtp({ email });
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
 // Login User
 export const login = createAsyncThunk("auth/login", async (data, thunkAPI) => {
   try {
@@ -34,7 +58,7 @@ export const login = createAsyncThunk("auth/login", async (data, thunkAPI) => {
     const message =
       error.response && error.response.data && error.response.data.message;
     toast.error(error.response.data.message);
-    return thunkAPI.rejectWithValue(message);
+    return thunkAPI.rejectWithValue(error);
   }
 });
 
@@ -78,6 +102,7 @@ const initialState = {
   user: null,
   status: STATUSES.IDLE,
   token: null,
+  otpData: null,
 };
 
 export const authSlice = createSlice({
@@ -92,6 +117,14 @@ export const authSlice = createSlice({
     logOut: (state, action) => {
       state.user = null;
       state.token = null;
+    },
+
+    addOtpData: (state, action) => {
+      state.otpData = action.payload;
+    },
+
+    removeOtpData: (state) => {
+      state.otpData = null;
     },
   },
   extraReducers: (builder) => {
@@ -146,7 +179,8 @@ export const authSlice = createSlice({
   },
 });
 
-export const { resetStatem, logOut } = authSlice.actions;
+export const { resetStatem, logOut, addOtpData, removeOtpData } =
+  authSlice.actions;
 
 export const AuthState = (state) => state.auth;
 

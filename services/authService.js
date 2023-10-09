@@ -28,6 +28,16 @@ const restPassword = async ({ newPassword, confirmPassword, token }) => {
   return response.data.message;
 };
 
+const verifyOtp = async ({ otp, email, hash }) => {
+  const response = await http.post("/user/verify-otp", { otp, email, hash });
+  return response.data;
+};
+
+const resendOtp = async ({ email }) => {
+  const response = await http.post("/user/resend-otp", { email });
+  return response.data;
+};
+
 const getUserDetail = async (userId) => {
   const response = await AxiosPrivate.get(`/user/${userId}`);
 
@@ -40,6 +50,8 @@ const authService = {
   forgotPassword,
   restPassword,
   getUserDetail,
+  verifyOtp,
+  resendOtp
 };
 
 export default authService;

@@ -10,8 +10,15 @@ import ListView from "./ListView";
 import { Colors } from "@/styles/theme/theme";
 import Search from "../Search";
 
+const options = ["Category 1", "Category 2", "Category 3", "Category 5"];
+
 const Store = () => {
   const [view, setView] = useState("grid");
+  const [category, setCategory] = useState("All Category");
+
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value);
+  };
 
   const toggleView = useCallback((type) => setView(type), []);
   return (
@@ -30,7 +37,12 @@ const Store = () => {
         </Typography>
 
         <LeftFilterHeader>
-          <DropDown />
+          <DropDown
+            value={category}
+            onChange={handleCategoryChange}
+            options={options}
+            label="All Category"
+          />
           <Box display="flex" alignItems="center" marginLeft={2}>
             <Typography fontSize={14}>View</Typography>
             <Stack direction="row" alignItems="center" marginLeft={1}>

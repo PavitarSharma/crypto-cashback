@@ -27,8 +27,10 @@ import toast from "react-hot-toast";
 import useRegisterModal from "@/hooks/useRegisterModal";
 import useLoginModal from "@/hooks/useLoginModal";
 import useOtpModal from "@/hooks/useOtpModal";
-import { AuthState, signUp } from "@/redux/reducers/authSlice";
+import { AuthState, addOtpData, signUp } from "@/redux/reducers/authSlice";
 
+const phoneRegExp =
+  /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
 const validationSchema = Yup.object({
   firstName: Yup.string()
     .min(2, "Must be 2 chracters or more")
@@ -48,11 +50,15 @@ const validationSchema = Yup.object({
     )
     .required("Passowrd is required!"),
   termsCheck: Yup.boolean(),
+  mobile: Yup.string()
+    .matches(phoneRegExp, "Phone number is not valid")
+    .min(10, "Too short")
+    .max(15, "Too long"),
 });
 
 const RegisterModal = () => {
   const dispatch = useDispatch();
-  const {status} = useSelector(AuthState)
+  const { status } = useSelector(AuthState);
   const registerModal = useRegisterModal();
   const loginModal = useLoginModal();
   const otpModal = useOtpModal();
@@ -74,12 +80,21 @@ const RegisterModal = () => {
   }, [otpModal, registerModal]);
 
   const onSubmit = async (values) => {
+    const { firstName, lastName, email, mobile, password } = values;
     // const token = captchaRef.current.getValue();
     // if (!token) {
     //   throw new Error("Please verify");
     // }
+    const body = {
+      firstName,
+      lastName,
+      email,
+      mobile: +mobile,
+      password,
+    };
 
-    const response = await dispatch(signUp(values)).unwrap();
+    const response = await dispatch(signUp(body)).unwrap();
+    dispatch(addOtpData(response));
     toggleOtpModal();
     toast.success(response.message);
   };
@@ -132,6 +147,14 @@ const RegisterModal = () => {
               label="Last Name"
               id="lastName"
               name="lastName"
+              control={control}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <RHFTextFiled
+              name="mobile"
+              id="mobile"
+              label="Mobile"
               control={control}
             />
           </Grid>

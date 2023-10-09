@@ -14,7 +14,8 @@ import useLoginModal from "@/hooks/useLoginModal";
 import useRegisterModal from "@/hooks/useRegisterModal";
 import { useCallback } from "react";
 import useForgotPasswordModal from "@/hooks/useForgotPasswordModal";
-import { AuthState, login } from "@/redux/reducers/authSlice";
+import { AuthState, addOtpData, login } from "@/redux/reducers/authSlice";
+import useOtpModal from "@/hooks/useOtpModal";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Email is Invalid").required("Email is required!"),
@@ -38,13 +39,34 @@ const LoginModal = () => {
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
   const forgotPasswordModal = useForgotPasswordModal();
+  const otpModal = useOtpModal();
+
+  const toogleOtpModal = useCallback(() => {
+    loginModal.onClose();
+    otpModal.onOpen();
+  }, [otpModal, loginModal]);
 
   const onSubmit = async (values) => {
-    await dispatch(login(values)).unwrap();
-    toast.success("Log in successfully.");
-    loginModal.onClose();
+    try {
+      const data = await dispatch(login(values)).unwrap();
+      toast.success("Log in successfully.");
+      loginModal.onClose();
+      reset();
+    } catch (error) {
+      console.log("Error Message: ", error);
+      const data = error.response.data;
 
-    reset();
+      if (
+        data?.message ===
+        "Your account is not verified.We send you otp in your mail.Please verify your account before login."
+      ) {
+        dispatch(addOtpData(data));
+        setTimeout(() => {
+          toogleOtpModal();
+        }, 2000);
+        reset();
+      }
+    }
   };
 
   const onToggle = useCallback(() => {

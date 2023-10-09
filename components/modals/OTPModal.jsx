@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Stack, Typography } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MuiOtpInput } from "mui-one-time-password-input";
 import Button from "../Button";
 import { Colors } from "@/styles/theme/theme";
@@ -14,6 +14,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import useLoginModal from "@/hooks/useLoginModal";
+import {
+  AuthState,
+  addOtpData,
+  removeOtpData,
+  resendOtp,
+  verifyOtp,
+} from "@/redux/reducers/authSlice";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Email is Invalid").required("Email is required!"),
@@ -21,23 +28,31 @@ const validationSchema = Yup.object({
 
 const OTPModal = ({ handleOpenLoginModal, open, setOpen }) => {
   const dispatch = useDispatch();
+  const { otpData } = useSelector(AuthState);
   const [otp, setOtp] = useState("");
   const [isResend, setIsResend] = useState(false);
   const otpModal = useOtpModal();
   const loginModal = useLoginModal();
-
-  const { control, handleSubmit } = useForm({
+  const [isLoading, setIsLoading] = useState(false);
+  const { control, handleSubmit, reset } = useForm({
     resolver: yupResolver(validationSchema),
   });
+
+  useEffect(() => {
+    // Reset the form when the modal is opened or isResend changes
+    if (open || isResend) {
+      reset();
+    }
+  }, [open, isResend, reset]);
 
   const handleChange = (newValue) => {
     setOtp(newValue);
   };
 
   const toggleLoginModal = useCallback(() => {
-    loginModal.onOpen()
-    otpModal.onClose()
-  }, [loginModal, otpModal])
+    loginModal.onOpen();
+    otpModal.onClose();
+  }, [loginModal, otpModal]);
 
   const handleVerifyOtp = async () => {
     const body = {
@@ -45,19 +60,33 @@ const OTPModal = ({ handleOpenLoginModal, open, setOpen }) => {
       email: otpData.email,
       hash: otpData.hash,
     };
-    // try {
-    //   const data = await verifyOtp(body).unwrap();
-    //   toast.success(data.message);
-    //   dispatch(removeOtpData());
-    //   toggleLoginModal();
-    //   setOtp("")
-    // } catch (error) {
-    //   console.log(error);
-    //   toast.error(error.data.message);
-    // }
+
+    const data = await dispatch(verifyOtp(body)).unwrap();
+    toast.success(data.message);
+    dispatch(removeOtpData());
+    toggleLoginModal();
+    setOtp("");
   };
 
-  const toggleIsResend = useCallback(() => setIsResend((state) => !state));
+  const handleResendOtp = async (values) => {
+    setIsLoading(true);
+    try {
+      const data = await dispatch(resendOtp({ email: values.email })).unwrap();
+      dispatch(addOtpData(data));
+      reset();
+    } catch (error) {
+      toast.error(
+        "Something went wroen when sending the OTP message. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleIsResend = useCallback(() => {
+    setIsResend((state) => !state)
+    reset()
+  });
 
   const body = (
     <>
@@ -112,8 +141,9 @@ const OTPModal = ({ handleOpenLoginModal, open, setOpen }) => {
 
               <Box marginTop={1} width="100%">
                 <Button
+                  disabled={isLoading}
                   sx={{ width: "100%" }}
-                  // onClick={handleSubmit(onSubmit)}
+                  onClick={handleSubmit(handleResendOtp)}
                   size="large"
                   title="Send"
                 />
