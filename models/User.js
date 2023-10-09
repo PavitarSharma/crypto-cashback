@@ -27,8 +27,8 @@ const userSchema = mongoose.Schema(
 
     mobile: {
       type: Number,
-      // unique: true,
       default: null,
+      unique: true
     },
 
     avatar: {
@@ -50,22 +50,22 @@ const userSchema = mongoose.Schema(
     address: {
       country: {
         type: String,
-        trin: true,
+        trim: true,
       },
 
       state: {
         type: String,
-        trin: true,
+        trim: true,
       },
 
       city: {
         type: String,
-        trin: true,
+        trim: true,
       },
 
       pinCode: {
         type: String,
-        trin: true,
+        trim: true,
       },
     },
 
@@ -76,7 +76,7 @@ const userSchema = mongoose.Schema(
 
     termsCheck: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     resetPasswordToken: String,

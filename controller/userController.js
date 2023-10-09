@@ -11,9 +11,9 @@ import jwt from "jsonwebtoken";
 
 // Create a new User
 export const signUpUser = asyncHandler(async (req, res, next) => {
-  const { firstName, lastName, email, password, termsCheck } = req.body;
+  const { firstName, lastName, email, password, termsCheck, mobile } = req.body;
 
-  if (!firstName || !lastName || !email || !password || !termsCheck) {
+  if (!firstName || !lastName || !email || !password) {
     return next(new ErrorHandler(400, "All fields are required!"));
   }
 
@@ -27,6 +27,7 @@ export const signUpUser = asyncHandler(async (req, res, next) => {
     email,
     password: hashPassword,
     termsCheck,
+    mobile,
   };
 
   //   Hash OTP
@@ -41,7 +42,7 @@ export const signUpUser = asyncHandler(async (req, res, next) => {
   // Send mail with OTP
   try {
     await userService.senByMail({ email, otp });
-    res.json({
+    res.status(201).json({
       otp,
       email,
       hash: `${hash}.${expires}`,
@@ -138,7 +139,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
       otp,
       email,
       hash: `${hash}.${expires}`,
-      message: `Your account is not verified. Please verify your account before login.`,
+      message: `Your account is not verified.We send you otp in your mail.Please verify your account before login.`,
     });
   }
 

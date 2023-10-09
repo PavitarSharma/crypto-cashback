@@ -18,7 +18,7 @@ class UserService {
       termsCheck: user.termsCheck,
       address: user.address,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     };
   }
 
@@ -70,12 +70,23 @@ class UserService {
 
   // Create User
   async createUser(data) {
-    const existingUser = await User.findOne({ email: data.email });
-
-    if (existingUser) {
+    // Check for duplicate email
+    const existingUserWithEmail = await User.findOne({ email: data.email });
+    if (existingUserWithEmail) {
       throw new Error("User with this email already exists");
     }
 
+    // Check for duplicate mobile
+    if (data.mobile) {
+      const existingUserWithMobile = await User.findOne({
+        mobile: data.mobile,
+      });
+      if (existingUserWithMobile) {
+        throw new Error("User with this mobile number already exists");
+      }
+    }
+
+    // Create the new user
     const user = await User.create(data);
 
     return user;
