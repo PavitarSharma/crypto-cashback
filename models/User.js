@@ -28,13 +28,10 @@ const userSchema = mongoose.Schema(
     mobile: {
       type: Number,
       default: null,
-      unique: true
+      unique: true,
     },
 
-    avatar: {
-      id: String,
-      url: String,
-    },
+    avatar: String,
 
     role: {
       type: String,
@@ -53,17 +50,17 @@ const userSchema = mongoose.Schema(
         trim: true,
       },
 
-      state: {
+      currency: {
         type: String,
         trim: true,
       },
 
-      city: {
+      crypto: {
         type: String,
         trim: true,
       },
 
-      pinCode: {
+      language: {
         type: String,
         trim: true,
       },
@@ -77,6 +74,11 @@ const userSchema = mongoose.Schema(
     termsCheck: {
       type: Boolean,
       default: false,
+    },
+
+    notification: {
+      type: [String],
+      default: ["All"],
     },
 
     resetPasswordToken: String,

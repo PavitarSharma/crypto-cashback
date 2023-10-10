@@ -9,11 +9,12 @@ import {
   signUpUser,
   updatePassword,
   updateUser,
-  uploadUserProfilePicture,
+  updateUserAddress,
   userDetail,
   verifyOtp,
 } from "../controller/userController.js";
 import { auth } from "../middlewares/auth.js";
+import upload from "../middlewares/multer.js";
 
 const router = express.Router();
 
@@ -29,7 +30,6 @@ router.post("/forgot-password", forgotPassword);
 
 router.post("/reset-password", resetPassword);
 
-
 // Auth Routes
 
 router.post("/update-password", auth, updatePassword);
@@ -38,9 +38,9 @@ router.get("/", auth, allUsers);
 
 router.get("/:id", auth, userDetail);
 
-router.patch("/:id", auth, updateUser);
+router.post("/:id/update-user-info", auth, updateUserAddress);
 
-router.post("/:id/avatar", auth, uploadUserProfilePicture);
+router.patch("/:id", auth, upload.single("avatar"), updateUser);
 
 router.delete("/:id", auth, deleteUser);
 

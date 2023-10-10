@@ -302,10 +302,19 @@ export const userDetail = asyncHandler(async (req, res, next) => {
 
 // Edit User
 export const updateUser = asyncHandler(async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+  const fileName = `${process.env.SERVER_URL}/${req.file.filename}`;
+  const { firstName, lastName, email, mobile } = req.body;
+
+  const body = {
+    firstName,
+    lastName,
+    email,
+    mobile,
+    avatar: fileName ? fileName : "",
+  };
+  const user = await User.findByIdAndUpdate(req.params.id, body, {
     new: true,
     runValidator: true,
-    // useFindAndModify: false,
   }).select("-password");
 
   if (!user) {
@@ -315,10 +324,25 @@ export const updateUser = asyncHandler(async (req, res, next) => {
   res.status(200).json(user);
 });
 
-// Upload User Profile Picture
-export const uploadUserProfilePicture = asyncHandler(
-  async (req, res, next) => {}
-);
+export const updateUserAddress = asyncHandler(async (req, res, next) => {
+  const { country, currency, crypto, language } = req.body;
+
+  const address = {
+    country,
+    currency,
+    crypto,
+    language,
+  };
+
+  const user = await userService.findUserWithId(req.params.id);
+
+  user.address = address;
+  await user.save();
+
+  const userDetail = await userService.getUserDetail(user);
+
+  res.status(200).json(userDetail);
+});
 
 // Delete User
 export const deleteUser = asyncHandler(async (req, res, next) => {
