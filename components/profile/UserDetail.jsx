@@ -20,7 +20,7 @@ import RHFTextFiled from "../inputs/RHFTextFiled";
 import Button from "../Button";
 import { MdCloudUpload } from "react-icons/md";
 import UpdatePassword from "./UpdatePassword";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const phoneRegExp =
@@ -55,6 +55,12 @@ const UserDetail = () => {
     resolver: yupResolver(validationSchema),
   });
 
+  useEffect(() => {
+    if (user) {
+      setImgSrc(user?.avatar);
+    }
+  }, [user]);
+
   const onImageUpload = (event) => {
     const file = event.target.files[0];
     setFile(file);
@@ -63,15 +69,15 @@ const UserDetail = () => {
 
   const onSubmit = async (values) => {
     const { firstName, lastName, email, mobile } = values;
-    const body = {
-      firstName,
-      lastName,
-      email,
-      mobile: mobile ? +mobile : null,
-    };
-    console.log(body);
 
-    await dispatch(updateUser({ id: user?._id, data: body })).unwrap();
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("email", email);
+    formData.append("mobile", mobile ? +mobile : null);
+    formData.append("avatar", file);
+
+    await dispatch(updateUser({ id: user?._id, data: formData })).unwrap();
     toast.success("User updated.");
   };
 

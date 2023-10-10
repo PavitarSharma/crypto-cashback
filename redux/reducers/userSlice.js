@@ -59,6 +59,21 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+export const updateUserInfo = createAsyncThunk(
+  "user/updateUserInfo",
+  async ({ id, data }, thunkAPI) => {
+    try {
+      return await userService.updateUserInfo({ id, data });
+    } catch (error) {
+      const message =
+        error.response && error.response.data && error.response.data.message;
+
+      toast.error(error.response.data.message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // Delete User
 export const deleteUser = createAsyncThunk(
   "user/deleteUser",
@@ -139,6 +154,17 @@ export const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(updateUser.rejected, (state) => {
+        state.status = STATUSES.ERROR;
+      })
+
+      .addCase(updateUserInfo.pending, (state) => {
+        state.status = STATUSES.LOADING;
+      })
+      .addCase(updateUserInfo.fulfilled, (state, action) => {
+        state.status = STATUSES.IDLE;
+        state.user = action.payload;
+      })
+      .addCase(updateUserInfo.rejected, (state) => {
         state.status = STATUSES.ERROR;
       })
 

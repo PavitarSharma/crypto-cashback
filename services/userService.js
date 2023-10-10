@@ -13,7 +13,20 @@ const updatePassword = async (data) => {
 };
 
 const updateUser = async ({ id, data }) => {
-  const response = await AxiosPrivate.patch(`/user/${id}`, data);
+  const response = await AxiosPrivate.patch(`/user/${id}`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+};
+
+const updateUserInfo = async ({ id, data }) => {
+  const response = await AxiosPrivate.post(
+    `/user/${id}/update-user-info`,
+    data
+  );
 
   return response.data;
 };
@@ -34,6 +47,7 @@ const userService = {
   getUserDetail,
   updatePassword,
   updateUser,
+  updateUserInfo,
   getAllUsers,
   deleteUser,
 };
